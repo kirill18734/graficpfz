@@ -1,0 +1,102 @@
+body {
+    font-family: Arial, sans-serif;
+}
+/*конейтенер для информационой таблицы и для результирующей*/
+.table-container {
+    display: flex;
+    margin-top:10px;
+}
+
+/*Информационная таблица*/
+
+.table_info {
+        min-width: 100px; /* Минимальная ширина таблицы */
+        border-collapse: collapse; /* Убирает двойные границы */
+
+    }
+
+.table_info th {
+    min-width: 150px; /* Минимальная ширина ячеек заголовка */
+    border: 1px solid #000; /* Граница ячеек */
+    text-align: center; /* Выравнивание текста */
+}
+
+.summaryweekend {
+    background-color: #92D050;
+    text-align: center;
+    color:#FFFFFF;
+}
+
+.summarywork {
+    background-color: #FF0000;
+    text-align: center;
+}
+
+.summarydop {
+    background-color: #FFC000;
+    text-align: center;
+    color:#FFFFFF;
+}
+
+.summaryinvent {
+    background-color: #00B0F0;
+    text-align: center;
+}
+
+table {
+    border-collapse: collapse;
+    margin-top: 10px;
+    min-width: 300px; /* Минимальная ширина для предотвращения сжатия */
+}
+/*Результирующая таблица*/
+.result_table{
+margin-left: 100px;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 5px;
+}
+.data_result td {
+    text-align: center; /* Выравнивание для всех ячеек */
+}
+
+.data_result td:first-child {
+    text-align: left; /* Выравнивание только для первой ячейки */
+}
+.smens_or_dop th{
+        padding: 3px 30px  3px 2px;
+        text-align: left ; /* Выравнивание текста влево */
+    }
+
+.header_winter {
+    background-color: #66A1D2;
+}
+
+.header {
+    background-color: #cce5ff;
+}
+
+.weekend {
+    background-color: #92D050;
+    color: #92D050;
+}
+.work {
+    background-color: #FF0000;
+    color: #FF0000;
+}
+.invent {
+    background-color: #00B0F0;
+    color: #00B0F0;
+}
+.dop_smens{
+    background-color: #FFC000;
+    color:black;
+}
+.guide {
+    background-color: #ff69b4;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+}
