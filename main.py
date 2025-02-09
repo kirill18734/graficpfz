@@ -42,11 +42,11 @@ when  CAST({row[1]} AS INTEGER) <= 1 then CAST({row[1]} AS INTEGER)
 else 0 
 end
 ''')
-        query_3.append(f'''case 
-        when  CAST({row[1]} AS INTEGER) > 1 then CAST({row[1]} AS INTEGER)
-        else 0 
-        end
-        ''')
+            query_3.append(f'''case 
+            when  CAST({row[1]} AS INTEGER) > 1 then CAST({row[1]} AS INTEGER)
+            else 0 
+            end
+            ''')
         # Добавляем второй элемент строки в список
         if count > 15:
             query_2.append(f'''
@@ -117,10 +117,10 @@ SELECT name FROM {list_months_eng[data_months()[0]-1]};
     # Получение списка столбцов
     cursor.execute(f"PRAGMA table_info({month});")
     query_1 = [f'''
-    case when {row[1]} = 1.0 then  \'<td class="work ">\' ||  {row[1]}  || \'</td>\' 
-     when {row[1]} = 0.0 then  \'<td class="weekend ">\' ||  {row[1]}  || \'</td>\' 
-     when {row[1]} = 1.1 then  \'<td class="invent">\' ||  {row[1]}  || \'</td>\' 
-     when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  {row[1]}  || \'</td>\' end
+    case when {row[1]} = 1.0 then  \'<td class="work ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+     when {row[1]} = 0.0 then  \'<td class="weekend ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+     when {row[1]} = 1.1 then  \'<td class="invent">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+     when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' end
 
     '''
                for row in cursor.fetchall()][1:]
