@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>График смен</title>
+</head>
+<body>
+<table>
+    <tr class="header_winter">
+        <th colspan="32">Март</th>
+    </tr>   
+    <tr class="header">
+        <th rowspan="2">Сотрудник</th>
+        <script>
+const days = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+const index_weekday = сб/* здесь должен быть ваш индекс */;
+
+for (let i = 0; i < 4; i++) { // 4 недели
+    for (let j = 0; j < 7; j++) {
+        const dayIndex = (index_weekday + j) % 7; // вычисляем индекс дня
+        document.write('<th>' + days[dayIndex] + '</th>');
+    }
+}
+</script>
+    </tr>
+    <tr class="header">
+        <script>
+        for (let i = 1; i < 32; i++) {
+            document.write('<th>' + i + '</th>');
+        }
+        </script>
+    </tr>
+<tr><td class="header">Кирилл</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td></tr><tr><td class="header">Петя</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td><td class="weekend ">0.0</td></tr>
+</table>
+<div class="table-container">
+    <table class="table_info">
+        <tr class="summarywork">  <th>Работа//смена</th>  </tr>
+        <tr class="summaryweekend"><th>Выходной</th></tr>
+        <tr class="summaryinvent"> <th>Инвентаризация</th></tr>
+        <tr class="summarydop"><th>Подработка/ч</th> </tr>
+    </table>
+<table class="result_table">
+<tr class="header_winter">
+    <th colspan="5">Итоги (Март)</th>
+</tr>
+<tr>
+            <th rowspan="2">Сотрудник</th>
+            <th colspan="2">Смены</th>
+            <th colspan="2">Подработки/ч</th>
+        </tr>
+        <tr class="smens_or_dop">
+            <th >1/2</th>
+            <th>2/2</th>
+            <th>1/2</th>
+            <th >2/2</th>
+        </tr>
+        
+        <tr class="data_result"><td>Кирилл</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr class="data_result"><td>Петя</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+</table>
+</div>
+</body>
+</html>
+

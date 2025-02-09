@@ -106,7 +106,14 @@ def get_empoyee(month):
     # Подключение к базе данных
     con = sl.connect('DB/data_grafic.db')
     cursor = con.cursor()
-
+    cursor.execute(f'select count(*) from {month}')
+    t = [row[0] for row in cursor.fetchall()]
+    # если в новом месяце нет, сотрудников, то копируем из предыдущего
+    if t[0] == 0 :
+        cursor.execute(f'''
+        INSERT INTO {month} (name)
+SELECT name FROM {list_months_eng[data_months()[0]-1]};
+''')
     # Получение списка столбцов
     cursor.execute(f"PRAGMA table_info({month});")
     query_1 = [f'''
@@ -202,10 +209,9 @@ for (let i = 0; i < 4; i++) { // 4 недели
 
 '''
 
-    with open('browser/index.html', 'w', encoding='UTF-8') as w:
+    with open(f'browser/{list_months_eng[data_months()[0]]}.html', 'w', encoding='UTF-8') as w:
         t = w.write(result_text)
 
 
-creat_html(list_months[data_months()[0]-1], weekdays[data_months()[1]], get_count_days(list_months_eng[data_months()[0]-1]),
-
-           get_empoyee(list_months_eng[data_months()[0]-1]), get_result_count(list_months_eng[data_months()[0]-1]))
+creat_html(list_months[data_months()[0]], weekdays[data_months()[1]], get_count_days(list_months_eng[data_months()[0]]),
+get_empoyee(list_months_eng[data_months()[0]]), get_result_count(list_months_eng[data_months()[0]]))
