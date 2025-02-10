@@ -61,7 +61,7 @@ class Main:
     # дополнительный аргумент, для создания нового листа
     def __init__(self):
         self.selected_number = None
-        self.status_dict = {}
+        self.status_dict = []
         self.select_invent = None
         self.smens = None
         self.image_message_id = None
@@ -85,6 +85,7 @@ class Main:
         self.delete_user = None
         self.last_list = None
         self.start_main()
+        self.index  = None
 
     # начальные кнопки, если нет, нового месяца, но используем текущий, или если он есть, то выводим 2 кнопки
     def get_months(self):
@@ -229,6 +230,18 @@ class Main:
                 elif self.call.data.startswith('user_'):
                     self.select_user = str(self.call.data).replace(
                         'user_', '')
+                    con = sl.connect('DB/data_grafic.db')
+                    cursor = con.cursor()
+                    # получаем индекс выбранного месяца
+                    self.index = list_months.index(self.month)
+                    # получает сотрудников из БД
+                    # Предположим, что cursor.execute возвращает список кортежей
+                    value_user = [user[1:] for user in
+                                  cursor.execute(
+                                      f'''select * from {list_months_eng[self.index]} where name = \'{self.select_user}\'''')]
+                    # Преобразуем список кортежей в плоский список
+
+                    self.status_dict = [item for sublist in value_user for item in sublist]
                     self.actualy_smens()
                 # если выбран сотрудник на удаление, то вызываем функию для
                 # удаления
@@ -256,23 +269,23 @@ class Main:
                     # Обработка статусов
                 elif (self.smens + '_') in self.call.data:
                     day, week_day, smens, current_value = self.call.data.split('_')
-                    self.key  = int(day)
+                    self.key = int(day)-1
                     if self.smens == 'smens':
-                        if current_value == 0.0 and 'сб' not in week_day and 'вс' not in week_day:
+
+                        if float(current_value) == 0.0 and week_day not in ('вс', 'сб'):
                             self.status_dict[self.key] = 1.0
                             self.actualy_smens()
-                        elif current_value == 1.0 and 'сб' not in week_day and 'вс' not in week_day:
+                        elif float(current_value) == 1.0 and week_day not in ('вс', 'сб'):
                             self.status_dict[self.key] = 0.0
                             self.actualy_smens()
-                        elif ('сб' in week_day or 'вс' in week_day) and current_value == 1.0:
+                        elif week_day in ('вс', 'сб') and float(current_value) == 1.0:
                             self.select_invent = 0.0
                             self.select_n = 1.0
-
                             self.invent()
-                        elif ('сб' in week_day or 'вс' in week_day) and current_value == 0.0:
-                            self.status_dict[self.key] = 1
+                        elif week_day in ('вс', 'сб') and float(current_value) == 0.0:
+                            self.status_dict[self.key] = 1.0
                             self.select_invent = 1.1
-                            self.select_n = 1
+                            self.select_n = 1.0
                             self.invent()
                         else:
                             response_text = """Чтобы изменить подработку, перейдите пожалуйста в раздел "Подработки"."""
@@ -281,12 +294,12 @@ class Main:
 
                     elif self.smens == 'dopsmens':
 
-                        if current_value in (1.0, 1.1):
+                        if  float(current_value) in (1.0, 1.1):
                             response_text = "Чтобы изменить смену, перейдите пожалуйста в раздел 'Смены'."
                             bot.answer_callback_query(call.id, response_text,
                                                       show_alert=True)
                         else:
-                            self.selected_number = self.status_dict[self.key - 1]
+                            self.selected_number = self.status_dict[self.key]
                             self.dop_smens()
                 elif call.data == "invent_selected":
                     self.select_new_invent = f'{self.select_invent}i'
@@ -312,14 +325,9 @@ class Main:
 
                     self.dop_smens()  # Обновляем кнопки
                 elif call.data == 'save_invent':
-                    if 'i' not in str(self.key):
-                        self.key = int(self.key)
+                    if self.select_invent != 1.1:
 
-                    self.status_dict = {
-                        key if key != self.key else self.select_new_invent: value
-                        for key, value in
-                        self.status_dict.items()}
-                    self.status_dict[self.select_new_invent] = self.select_n
+                    self.status_dict[self.key]  = self.select_n
 
                     self.actualy_smens()
                 elif call.data == 'cancel_invent':
@@ -428,18 +436,11 @@ class Main:
         )
 
     def actualy_smens(self):
+
         self.markup = types.InlineKeyboardMarkup()
         # Подключение к базе данных
-        con = sl.connect('DB/data_grafic.db')
-        cursor = con.cursor()
-        index = list_months.index(self.month)
-        # получает сотрудников из БД
-        # Предположим, что cursor.execute возвращает список кортежей
-        value_user = [user[1:] for user in
-                      cursor.execute(f'''select * from {list_months_eng[index]} where name = \'{self.select_user}\'''')]
-        # Преобразуем список кортежей в плоский список
-        self.status_dict = [item for sublist in value_user for item in sublist]
-        first_weekday_index = get_first_weekday_index(index)
+
+        first_weekday_index = get_first_weekday_index(self.index)
         buttons = []
         count = 1
         current_weekday_index = first_weekday_index
@@ -519,6 +520,7 @@ class Main:
         con = sl.connect('DB/data_grafic.db')
         cursor = con.cursor()
         index = list_months.index(self.month)
+        cursor.close()
         # получает сотрудников из БД
         users = [user[0] for user in cursor.execute(f'select name from {list_months_eng[index]}')]
         # Получаем список пользователей
