@@ -9,6 +9,8 @@ from telebot.types import BotCommand, InlineKeyboardMarkup, \
 # Создаем экземпляр бота
 from edit_chart.get_img_xl import open_site
 from main import data_months
+import calendar
+from datetime import datetime
 
 bot = telebot.TeleBot(data_config['my_telegram_bot']['bot_token'],
 
@@ -23,6 +25,24 @@ list_months = ['Январь', 'Февраль', 'Март', 'Апрель', 'М
 list_months_eng = ['January', 'February', 'March', 'April', 'May',
                    'June', 'July', 'August', 'September', 'October', 'November',
                    'December']
+weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
+
+
+def get_first_weekday_index(month_index):
+    # Если год не указан, используем текущий год
+
+    year = datetime.now().year
+
+    # Проверяем, что индекс месяца в допустимом диапазоне
+    if month_index < 0 or month_index > 11:
+        raise ValueError("Индекс месяца должен быть от 0 до 11.")
+
+    # Получаем индекс первого дня недели для указанного месяца
+    first_weekday_index = calendar.monthrange(year, month_index + 1)[0]
+
+    # Список названий дней недели
+
+    return first_weekday_index
 
 
 def load_user_ids():
@@ -69,9 +89,9 @@ class Main:
     # начальные кнопки, если нет, нового месяца, но используем текущий, или если он есть, то выводим 2 кнопки
     def get_months(self):
 
-        self.last_list = [f'Прошлый месяц {list_months[data_months()[0] - 2]}',
-                          f'Текущий месяц ({list_months[data_months()[0] - 1]}',
-                          f'Следующий месяц {list_months[data_months()[0]]}']
+        self.last_list = [f'Прошлый месяц ({list_months[data_months()[0] - 2]})',
+                          f'Текущий месяц ({list_months[data_months()[0] - 1]})',
+                          f'Следующий месяц ({list_months[data_months()[0]]})']
         return self.last_list
 
     def start_main(self):
@@ -136,7 +156,7 @@ class Main:
         @bot.callback_query_handler(func=lambda call: True)
         def handle_query(call):
             self.call = call
-            if 'Текущий месяц' in self.call.data or 'Следующий месяц' in self.call.data:
+            if 'Текущий месяц' in self.call.data or 'Следующий месяц' in self.call.data or 'Прошлый месяц' in self.call.data:
                 if self.call.data not in self.status_dict:
                     self.state_stack[self.call.data] = self.show_month_selection
 
@@ -146,16 +166,15 @@ class Main:
                 # Если кнопок нет, сбрасываем состояние и начинаем заново
                 handle_start_main(call.message)
             else:
-                if 'Текущий месяц' in self.call.data or 'Следующий месяц' in self.call.data:
+                if 'Текущий месяц' in self.call.data or 'Следующий месяц' in self.call.data or 'Прошлый месяц' in self.call.data:
                     self.state_stack[
                         self.call.data] = self.show_month_selection
                     # Сохраняем выбранный месяц
                     self.selected_month = self.call.data
                     self.month = str(self.selected_month).replace(
-                        'Текущий месяц (',
-                        '').replace(')',
-                                    '').replace(
-                        'Следующий месяц (', '').replace(')', '')
+                        'Текущий месяц (', '').replace(
+                        'Следующий месяц (', '').replace(
+                        'Прошлый месяц (', '').replace(')', '')
                     # После выбора месяца показываем кнопки "Смены / подработки" и "Сотрудники"
                     self.show_sments_dop_sments()
                 elif self.call.data in ['image']:
@@ -236,26 +255,23 @@ class Main:
 
                     # Обработка статусов
                 elif (self.smens + '_') in self.call.data:
-                    key, day, smens, current_value = self.call.data.split('_')
-
-                    self.key = key
+                    day, week_day, smens, current_value = self.call.data.split('_')
+                    self.key  = int(day)
                     if self.smens == 'smens':
-                        if current_value == 'None' and 'i' not in str(
-                                key) and 'сб' not in str(day) and 'вс' not in str(day):
-                            self.status_dict[int(self.key)] = 1
+                        if current_value == 0.0 and 'сб' not in week_day and 'вс' not in week_day:
+                            self.status_dict[self.key] = 1.0
                             self.actualy_smens()
-                        elif current_value == '1' and 'i' not in str(key) and 'сб' not in str(day) and 'вс' not in str(
-                                day):
-                            self.status_dict[int(self.key)] = None
+                        elif current_value == 1.0 and 'сб' not in week_day and 'вс' not in week_day:
+                            self.status_dict[self.key] = 0.0
                             self.actualy_smens()
-                        elif ('сб' in str(day) or 'вс' in str(day) or 'i' in str(key)) and current_value == '1':
-                            self.select_invent = key
-                            self.select_n = 1
+                        elif ('сб' in week_day or 'вс' in week_day) and current_value == 1.0:
+                            self.select_invent = 0.0
+                            self.select_n = 1.0
 
                             self.invent()
-                        elif ('сб' in str(day) or 'вс' in str(day) or 'i' in str(key)) and current_value == 'None':
-                            self.status_dict[int(self.key)] = 1
-                            self.select_invent = key
+                        elif ('сб' in week_day or 'вс' in week_day) and current_value == 0.0:
+                            self.status_dict[self.key] = 1
+                            self.select_invent = 1.1
                             self.select_n = 1
                             self.invent()
                         else:
@@ -265,14 +281,12 @@ class Main:
 
                     elif self.smens == 'dopsmens':
 
-                        if current_value == '1':
+                        if current_value in (1.0, 1.1):
                             response_text = "Чтобы изменить смену, перейдите пожалуйста в раздел 'Смены'."
                             bot.answer_callback_query(call.id, response_text,
                                                       show_alert=True)
                         else:
-                            self.key = self.key if 'i' in self.key else int(
-                                self.key)
-                            self.selected_number = self.status_dict[self.key]
+                            self.selected_number = self.status_dict[self.key - 1]
                             self.dop_smens()
                 elif call.data == "invent_selected":
                     self.select_new_invent = f'{self.select_invent}i'
@@ -292,7 +306,7 @@ class Main:
                     selected_number = int(call.data.split("_")[1])
                     # Проверяем, выбран ли номер
                     if self.selected_number == selected_number:
-                        self.selected_number = None  # Снимаем выбор, если номер уже выбран
+                        self.selected_number = 0.0  # Снимаем выбор, если номер уже выбран
                     else:
                         self.selected_number = selected_number  # Сохраняем новый выбранный номер
 
@@ -347,7 +361,6 @@ class Main:
                         self.smens_users()
                 elif self.call.data in ['cancel_all_smens']:
                     self.smens_users()
-
 
     def show_month_selection(self):
 
@@ -413,6 +426,7 @@ class Main:
             reply_markup=self.markup
 
         )
+
     def actualy_smens(self):
         self.markup = types.InlineKeyboardMarkup()
         # Подключение к базе данных
@@ -424,26 +438,31 @@ class Main:
         value_user = [user[1:] for user in
                       cursor.execute(f'''select * from {list_months_eng[index]} where name = \'{self.select_user}\'''')]
         # Преобразуем список кортежей в плоский список
-        flat_list = [item for sublist in value_user for item in sublist]
-
+        self.status_dict = [item for sublist in value_user for item in sublist]
+        first_weekday_index = get_first_weekday_index(index)
         buttons = []
         count = 1
-        for value in flat_list:
-            if value  == 0.0 :
+        current_weekday_index = first_weekday_index
+        for value in self.status_dict:
+            if value == 0.0:
                 emoji = "❌"  # Выходной
-            elif value == 1.0 :
+            elif value == 1.0:
                 emoji = "✅"  # Смена
-            elif value == 1.1 :
+            elif value == 1.1:
                 emoji = "🟦"  # Инвентаризация
             else:
                 emoji = "🟠"  # Подработка
+                # Получаем день недели с учетом текущего индекса
+            week_day = weekdays[current_weekday_index]
 
-            button_text = f"{count}д (вт) {emoji}"
+            button_text = f"{count}д ({week_day}) {emoji}"
             # item = types.InlineKeyboardButton(button_text,
             #                                   callback_data=f"{key}_{get_days[int(str(key).replace('i', ''))]}_"
             #                                                 f"{self.smens}_{value}")
-            item = types.InlineKeyboardButton(button_text, callback_data=f"{self.smens}_{value}")
-            count +=1
+            item = types.InlineKeyboardButton(button_text, callback_data=f"{count}_{week_day}_{self.smens}_{value}")
+            # Увеличиваем индекс дня недели, и если он превышает 6, сбрасываем на 0
+            current_weekday_index = (current_weekday_index + 1) % 7
+            count += 1
             buttons.append(item)
 
         self.markup.add(*buttons)
@@ -609,6 +628,64 @@ class Main:
             chat_id=self.call.message.chat.id,
             message_id=self.call.message.message_id,
             reply_markup=new_markup
+        )
+
+    def invent(self):
+        self.markup = types.InlineKeyboardMarkup()
+
+        # Проверяем, выбран ли номер, и устанавливаем соответствующий текст кнопки
+        if self.select_invent == 0.0:
+            button_text = "✅"  # Зеленая галочка для выбранного номера
+            callback_data = "invent_not_selected"  # Изменяем состояние
+        else:
+            button_text = "❌"  # Красный крестик для невыбранного номера
+            callback_data = "invent_selected"  # Изменяем состояние
+
+        item = types.InlineKeyboardButton(button_text,
+                                          callback_data=callback_data)
+        self.markup.add(item)
+
+        # Добавляем кнопки "Отмена" и "Сохранить"
+        cancel_button = types.InlineKeyboardButton("Убрать смену",
+                                                   callback_data='cancel_invent')
+        save_button = types.InlineKeyboardButton("💾 Сохранить!",
+                                                 callback_data='save_invent')
+        self.markup.add(cancel_button, save_button)
+        smen = 'Смены' if self.smens == 'smens' else 'Подработки'
+        # Обновляем клавиатуру в том же сообщении
+        bot.edit_message_text(
+            f"""Вы находитесь в разделе: "{self.selected_month}" - "Смены / подработки" - "<u>{smen}</u>".\n\nИспользуй кнопки для навигации. Чтобы вернуться на шаг назад, используй команду /back. В начало /start\n\nБудет ли инвентаризация?\n✅ - Да\n❌ - Нет""",
+            chat_id=self.call.message.chat.id,
+            message_id=self.call.message.message_id,
+            reply_markup=self.markup
+        )
+
+    def dop_smens(self):
+        self.markup = types.InlineKeyboardMarkup()
+        # Создаем кнопки от 1 до 12
+        for i in range(2, 13):
+            # Проверяем, выбран ли номер, и устанавливаем соответствующий текст кнопки
+            if int(self.selected_number) == i:
+                button_text = f"{i}ч ✅"  # Зеленая галочка для выбранного номера
+            else:
+                button_text = f"{i}ч ❌"  # Красный крестик для невыбранного номера
+            item = types.InlineKeyboardButton(button_text,
+                                              callback_data=f"number_{i}")
+            self.markup.add(item)
+
+        # Добавляем кнопки "Отмена" и "Сохранить"
+        cancel_button = types.InlineKeyboardButton("Отмена",
+                                                   callback_data='cancel')
+        save_button = types.InlineKeyboardButton("💾 Сохранить!",
+                                                 callback_data='save_smens')
+        self.markup.add(cancel_button, save_button)
+        smen = 'Смены' if self.smens == 'smens' else 'Подработки'
+        # Отправляем сообщение с кнопками
+        bot.edit_message_text(
+            f"""Вы находитесь в разделе: "{self.selected_month}" - "Смены / подработки" - "<u>{smen}</u>". \n\nИспользуй кнопки для навигации. Чтобы вернуться на шаг назад, используй команду /back. В начало /start \n\nВыберете подработку:\n❌ - не выбранные часы\n✅ - выбранные часы""",
+            chat_id=self.call.message.chat.id,
+            message_id=self.call.message.message_id,
+            reply_markup=self.markup
         )
 
 
