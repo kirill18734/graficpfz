@@ -25,16 +25,11 @@ list_months_eng = ['January', 'February', 'March', 'April', 'May',
                    'June', 'July', 'August', 'September', 'October', 'November',
                    'December']
 weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
-
-
 con = sl.connect('DB/data_grafic.db')
 cursor = con.cursor()
-test_query = f'''
-select * from February;
-'''
+query = f'''select * from February'''
 
-t = [i for i in cursor.execute(test_query)]  # Выполняем запрос
-
+t = [t for t in cursor.execute(query) ] # Выполняем запрос
 
 def get_first_weekday_index(month_index):
     # Если год не указан, используем текущий год
@@ -82,6 +77,7 @@ class Main:
         self.key = None
         self.state_stack = {}  # Стек для хранения состояний
         self.selected_employees = getattr(self, 'selected_employees', set())
+
         self.user_id = None
         self.data_smens = None
         self.selected_month = None
@@ -210,6 +206,7 @@ class Main:
                         'Следующий месяц (', '').replace(
                         'Прошлый месяц (', '').replace(')', '')
                     self.index = list_months.index(self.month)
+                    self.selected_month = list_months[self.index]
                     # После выбора месяца показываем кнопки "Смены / подработки" и "Сотрудники"
                     self.show_sments_dop_sments()
                 elif self.call.data in ['image']:
@@ -280,7 +277,8 @@ class Main:
                     value_user = [user[1:] for user in cursor.execute(
                         f'''select * from {list_months_eng[self.index]} where name = \'{self.select_user}\'''')]
                     # Теперь value_user содержит нужные данные
-                    cursor.close()
+                    cursor.close()  # Закрываем курсор
+                    con.close()
 
                     # Преобразуем список кортежей в плоский список
                     self.status_dict = [item for sublist in value_user for item in sublist]
@@ -290,21 +288,31 @@ class Main:
                 # если выбран сотрудник на удаление, то вызываем функию для
                 # удаления
                 elif self.call.data == 'confirm_delete':
-                    if self.selected_employees:
-                        delete_user = DeleteUsers(self.table_data)
-                        if list(self.selected_employees) and self.actualy_months:
-                            delete_user.delete(list(self.selected_employees),
-                                               self.actualy_months)
 
-                            response_text = "Сотрудник(и) удален(ы)"
+                    if self.selected_employees:
+                        for month in list_months_eng:
+                            con = sl.connect('DB/data_grafic.db')
+                            cursor = con.cursor()
+                            response_text = 'Удалено'
+                            query = f'''DELETE FROM  {month} where name in ({','.join(f"'{employee}'" for employee in self.selected_employees)});'''
+                            print(query)
+                            try:
+                                cursor.execute(query)  # Выполняем запрос
+                                con.commit()  # Фиксируем изменения
+                                if len(self.selected_employees)==1:
+                                    response_text = f"Сотрудник  {', '.join(self.selected_employees)} удален."
+                                else:
+                                    response_text = f"Сотрудники  {', '.join(self.selected_employees)} удалены."
+                            except Exception as error:
+                                print(f'Возникла ошибка при удалении: {error}')
+                            finally:
+                                cursor.close()  # Закрываем курсор
+                                con.close()  # Закрываем соединение
                             bot.answer_callback_query(call.id, response_text,
                                                       show_alert=True)
-                            self.add_del_employees()
-                        else:
-                            response_text = "Не удалось удалить пользователя, необходимо подключиться, возникла ошибка"
-                            bot.answer_callback_query(call.id, response_text,
-                                                      show_alert=True)
-                            self.add_del_employees()
+                        self.selected_employees = set()
+                        self.add_del_employees()
+
                     else:
                         response_text = "Чтобы изменить подработку, перейдите пожалуйста в раздел 'Подработки'."
                         bot.answer_callback_query(call.id, response_text,
@@ -545,7 +553,8 @@ class Main:
         index = list_months.index(self.month)
         # получает сотрудников из БД
         users = [user[0] for user in cursor.execute(f'select name from {list_months_eng[index]}')]
-        cursor.close()
+        cursor.close()  # Закрываем курсор
+        con.close()
         # Получаем список пользователей
         # users = self.table_data.get_users(self.month)
 
@@ -581,15 +590,14 @@ class Main:
                                 '/start']:
             employee_name = message.text  # Получаем введенное имя сотрудника
             response_text = None
-            for month in list_months_eng:
-                if str(employee_name) and list_months_eng[self.index]:
+
+            if str(employee_name):
+                for month in list_months_eng:
                     con = sl.connect('DB/data_grafic.db')
                     cursor = con.cursor()
-                    query = f'''INSERT INTO {month} (name) VALUES ('{employee_name}');'''
+                    query = f'''INSERT INTO {month} (name) VALUES ('{str(employee_name)}');'''
                     try:
                         cursor.execute(query)  # Выполняем запрос
-                        t = [t for t in cursor.execute(query) ]
-                        print(t)
                         con.commit()  # Фиксируем изменения
                         response_text = f"Сотрудник {employee_name} добавлен."
                         print("Обновление выполнено успешно.")
@@ -619,8 +627,17 @@ class Main:
                     self.add_del_employees()
 
     def dell_employee(self):
-        employees = self.table_data.get_users(
-            self.month)  # Получаем список сотрудников за последний месяц
+
+
+        con = sl.connect('DB/data_grafic.db')
+        cursor = con.cursor()
+        query = f'''
+        select name from {list_months_eng[self.index]};
+        '''
+
+        employees = [i[0] for i in cursor.execute(query)]  # Выполняем запрос
+        cursor.close()  # Закрываем курсор
+        con.close()  # Получаем список сотрудников за последний месяц
 
         new_markup = InlineKeyboardMarkup()
         try:
