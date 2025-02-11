@@ -11,7 +11,6 @@ from edit_chart.get_img_xl import open_site
 from main import data_months
 import calendar
 from datetime import datetime
-
 bot = telebot.TeleBot(data_config['my_telegram_bot']['bot_token'],
 
                       parse_mode='HTML')
@@ -26,6 +25,15 @@ list_months_eng = ['January', 'February', 'March', 'April', 'May',
                    'June', 'July', 'August', 'September', 'October', 'November',
                    'December']
 weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
+
+
+con = sl.connect('DB/data_grafic.db')
+cursor = con.cursor()
+test_query = f'''
+select * from February;
+'''
+
+t = [i for i in cursor.execute(test_query)]  # Выполняем запрос
 
 
 def get_first_weekday_index(month_index):
@@ -85,7 +93,31 @@ class Main:
         self.delete_user = None
         self.last_list = None
         self.start_main()
-        self.index  = None
+        self.index = None
+        self.current_value = None
+
+    # формируем обновленямые столбцы
+    def format_days(self, values):
+        formatted_string = ', '.join([f'day_{i + 1} = {value}' for i, value in enumerate(values)])
+        return formatted_string
+
+    def save_edit_smens(self, month, name, new_values):
+        con = sl.connect('DB/data_grafic.db')
+        cursor = con.cursor()
+        test_query = f'''
+        UPDATE {month} 
+        SET {new_values}
+        WHERE name = '{name}'
+        '''
+        try:
+            cursor.execute(test_query)  # Выполняем запрос
+            con.commit()  # Фиксируем изменения
+            print("Обновление выполнено успешно.")
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
+        finally:
+            cursor.close()  # Закрываем курсор
+            con.close()  # Закрываем соединение
 
     # начальные кнопки, если нет, нового месяца, но используем текущий, или если он есть, то выводим 2 кнопки
     def get_months(self):
@@ -163,7 +195,9 @@ class Main:
 
             if not self.state_stack or (
                     'Текущий месяц' not in str(list(self.state_stack.keys())[0]) and
-                    'Следующий месяц' not in str(list(self.state_stack.keys())[0])):
+                    'Следующий месяц' not in str(list(self.state_stack.keys())[0]) and
+                    'Прошлый месяц' not in str(list(self.state_stack.keys())[0])
+            ):
                 # Если кнопок нет, сбрасываем состояние и начинаем заново
                 handle_start_main(call.message)
             else:
@@ -171,11 +205,11 @@ class Main:
                     self.state_stack[
                         self.call.data] = self.show_month_selection
                     # Сохраняем выбранный месяц
-                    self.selected_month = self.call.data
-                    self.month = str(self.selected_month).replace(
+                    self.month = str(self.call.data).replace(
                         'Текущий месяц (', '').replace(
                         'Следующий месяц (', '').replace(
                         'Прошлый месяц (', '').replace(')', '')
+                    self.index = list_months.index(self.month)
                     # После выбора месяца показываем кнопки "Смены / подработки" и "Сотрудники"
                     self.show_sments_dop_sments()
                 elif self.call.data in ['image']:
@@ -209,6 +243,7 @@ class Main:
                 elif self.call.data in ['add_employees']:
                     if self.call.data not in self.status_dict:
                         self.state_stack[self.call.data] = self.add_del_employees
+
                     self.add_employees()
 
                 elif self.call.data in ['dell_employee']:
@@ -228,21 +263,30 @@ class Main:
                     self.add_del_employees()
 
                 elif self.call.data.startswith('user_'):
-                    self.select_user = str(self.call.data).replace(
-                        'user_', '')
                     con = sl.connect('DB/data_grafic.db')
                     cursor = con.cursor()
-                    # получаем индекс выбранного месяца
-                    self.index = list_months.index(self.month)
+                    self.select_user = str(self.call.data).replace(
+                        'user_', '')
                     # получает сотрудников из БД
                     # Предположим, что cursor.execute возвращает список кортежей
-                    value_user = [user[1:] for user in
-                                  cursor.execute(
-                                      f'''select * from {list_months_eng[self.index]} where name = \'{self.select_user}\'''')]
-                    # Преобразуем список кортежей в плоский список
 
+
+                    # Получаем текущий год
+                    current_year = datetime.now().year
+
+                    # Проверяем, является ли текущий год високосным
+                    is_leap_year = calendar.isleap(current_year)
+                    # Получаем данные из базы данных
+                    value_user = [user[1:] for user in cursor.execute(
+                        f'''select * from {list_months_eng[self.index]} where name = \'{self.select_user}\'''')]
+                    # Теперь value_user содержит нужные данные
+                    cursor.close()
+
+                    # Преобразуем список кортежей в плоский список
                     self.status_dict = [item for sublist in value_user for item in sublist]
-                    self.actualy_smens()
+                    if not is_leap_year and len(self.status_dict) == 29:
+                        self.status_dict = self.status_dict[:-1]
+                        self.actualy_smens()
                 # если выбран сотрудник на удаление, то вызываем функию для
                 # удаления
                 elif self.call.data == 'confirm_delete':
@@ -269,23 +313,17 @@ class Main:
                     # Обработка статусов
                 elif (self.smens + '_') in self.call.data:
                     day, week_day, smens, current_value = self.call.data.split('_')
-                    self.key = int(day)-1
+                    self.current_value = float(current_value)
+                    self.key = int(day) - 1
                     if self.smens == 'smens':
-
-                        if float(current_value) == 0.0 and week_day not in ('вс', 'сб'):
+                        print(self.current_value)
+                        if self.current_value == 0.0 and week_day not in ('вс', 'сб'):
                             self.status_dict[self.key] = 1.0
                             self.actualy_smens()
-                        elif float(current_value) == 1.0 and week_day not in ('вс', 'сб'):
+                        elif self.current_value == 1.0 and week_day not in ('вс', 'сб'):
                             self.status_dict[self.key] = 0.0
                             self.actualy_smens()
-                        elif week_day in ('вс', 'сб') and float(current_value) == 1.0:
-                            self.select_invent = 0.0
-                            self.select_n = 1.0
-                            self.invent()
-                        elif week_day in ('вс', 'сб') and float(current_value) == 0.0:
-                            self.status_dict[self.key] = 1.0
-                            self.select_invent = 1.1
-                            self.select_n = 1.0
+                        elif self.current_value < 2 and week_day in ('вс', 'сб'):
                             self.invent()
                         else:
                             response_text = """Чтобы изменить подработку, перейдите пожалуйста в раздел "Подработки"."""
@@ -294,7 +332,7 @@ class Main:
 
                     elif self.smens == 'dopsmens':
 
-                        if  float(current_value) in (1.0, 1.1):
+                        if self.current_value in (1.0, 1.1):
                             response_text = "Чтобы изменить смену, перейдите пожалуйста в раздел 'Смены'."
                             bot.answer_callback_query(call.id, response_text,
                                                       show_alert=True)
@@ -302,45 +340,30 @@ class Main:
                             self.selected_number = self.status_dict[self.key]
                             self.dop_smens()
                 elif call.data == "invent_selected":
-                    self.select_new_invent = f'{self.select_invent}i'
-                    self.select_invent = self.select_new_invent
+                    self.current_value = 1.1
                     self.invent()
                 elif call.data == "invent_not_selected":
-                    if type(self.select_invent) == str:
-                        self.select_new_invent = int(
-                            str(self.select_invent).replace('i',
-                                                            ''))  # Убираем элемент из выбранных
-                    else:
-                        self.select_new_invent = f'{self.select_invent}i'
-                    self.select_invent = self.select_new_invent
+                    self.current_value = 1.0
                     self.invent()
                     # Обновляем кнопки
                 elif self.call.data.startswith("number_"):
                     selected_number = int(call.data.split("_")[1])
                     # Проверяем, выбран ли номер
                     if self.selected_number == selected_number:
-                        self.selected_number = 0.0  # Снимаем выбор, если номер уже выбран
+                        self.selected_number = None  # Снимаем выбор, если номер уже выбран
                     else:
                         self.selected_number = selected_number  # Сохраняем новый выбранный номер
 
                     self.dop_smens()  # Обновляем кнопки
                 elif call.data == 'save_invent':
-                    if self.select_invent != 1.1:
-
-                    self.status_dict[self.key]  = self.select_n
+                    if self.current_value == 1.1:
+                        self.status_dict[self.key] = 1.1
+                    else:
+                        self.status_dict[self.key] = 1.0
 
                     self.actualy_smens()
                 elif call.data == 'cancel_invent':
-                    if 'i' not in str(self.key):
-                        self.key = int(self.key)
-
-                    self.status_dict = {
-                        key if key != self.key else int(
-                            str(self.key).replace('i', '')): value
-                        for key, value in
-                        self.status_dict.items()}
-                    self.status_dict[
-                        int(str(self.key).replace('i', ''))] = None
+                    self.status_dict[self.key] = 0.0
                     self.actualy_smens()
                 elif call.data == 'cancel':
                     # Логика для отмены
@@ -355,9 +378,9 @@ class Main:
                     self.actualy_smens()
                 elif self.call.data in ['save_all_smens']:
                     if self.month and self.select_user and self.status_dict:
-                        self.table.edit_smens(self.month, self.select_user,
-                                              self.status_dict)
 
+                        self.save_edit_smens(list_months_eng[self.index], self.select_user,
+                                             self.format_days(self.status_dict))
                         response_text = "Изменения сохранены."
                         bot.answer_callback_query(call.id, response_text,
                                                   show_alert=True)
@@ -514,15 +537,15 @@ class Main:
                              reply_markup=self.markup)
 
     def smens_users(self):
+        con = sl.connect('DB/data_grafic.db')
+        cursor = con.cursor()
         self.markup = types.InlineKeyboardMarkup()
         buttons = []
         # Подключение к базе данных
-        con = sl.connect('DB/data_grafic.db')
-        cursor = con.cursor()
         index = list_months.index(self.month)
-        cursor.close()
         # получает сотрудников из БД
         users = [user[0] for user in cursor.execute(f'select name from {list_months_eng[index]}')]
+        cursor.close()
         # Получаем список пользователей
         # users = self.table_data.get_users(self.month)
 
@@ -555,24 +578,33 @@ class Main:
 
     def process_employee_name(self, message):
         if message.text not in ['/back',
-                                '/start'] and message.text not in self.table_data.get_users(self.month):
+                                '/start']:
             employee_name = message.text  # Получаем введенное имя сотрудника
-            if str(employee_name) and self.actualy_months:
-                # add_users = AddUser(self.table_data)
+            response_text = None
+            for month in list_months_eng:
+                if str(employee_name) and list_months_eng[self.index]:
+                    con = sl.connect('DB/data_grafic.db')
+                    cursor = con.cursor()
+                    query = f'''INSERT INTO {month} (name) VALUES ('{employee_name}');'''
+                    try:
+                        cursor.execute(query)  # Выполняем запрос
+                        t = [t for t in cursor.execute(query) ]
+                        print(t)
+                        con.commit()  # Фиксируем изменения
+                        response_text = f"Сотрудник {employee_name} добавлен."
+                        print("Обновление выполнено успешно.")
+                    except Exception as e:
+                        response_text = f"Сотрудник уже есть, напишите другое имя."
+                        print(f"Произошла ошибка: {e}")
+                    finally:
+                        cursor.close()  # Закрываем курсор
+                        con.close()  # Закрываем соединение
 
-                # add_users.add(str(employee_name), self.actualy_months)
-                # Здесь вы можете обработать имя сотрудника, например, сохранить его в базе данных
-                response_text = f"Сотрудник {employee_name} добавлен."
-                bot.answer_callback_query(self.call.id, response_text,
+            bot.answer_callback_query(self.call.id, response_text,
                                           show_alert=True)
-                bot.delete_message(chat_id=message.chat.id,
+            bot.delete_message(chat_id=message.chat.id,
                                    message_id=message.message_id)
-                self.add_del_employees()
-            else:
-                response_text = "Не удалось добавить пользователя, необходимо подключиться, возникла ошибка"
-                bot.answer_callback_query(self.call.id, response_text,
-                                          show_alert=True)
-                self.add_del_employees()
+            self.add_del_employees()
         else:
             if message.message_id:
                 for id_ in range(max(1, message.message_id - 1), message.message_id + 1):
@@ -580,13 +612,6 @@ class Main:
                         bot.delete_message(chat_id=message.chat.id, message_id=id_)
                     except Exception as error:
                         print(f"Ошибка при удалении сообщения в process_employee_name: {id_}: {error}")
-
-            # elif message.text in self.table_data.get_users(self.month):
-            #     if self.state_stack.popitem():
-            #         self.state_stack.popitem()
-            #         response_text = f"Данное имя уже есть в таблице, пожалуйста, напишите другое"
-            #         bot.answer_callback_query(self.call.id, response_text,
-            #                                   show_alert=True)
 
             elif message.text == '/back':
                 if self.state_stack.popitem():
@@ -636,7 +661,7 @@ class Main:
         self.markup = types.InlineKeyboardMarkup()
 
         # Проверяем, выбран ли номер, и устанавливаем соответствующий текст кнопки
-        if self.select_invent == 0.0:
+        if self.current_value == 1.1:
             button_text = "✅"  # Зеленая галочка для выбранного номера
             callback_data = "invent_not_selected"  # Изменяем состояние
         else:
@@ -667,7 +692,7 @@ class Main:
         # Создаем кнопки от 1 до 12
         for i in range(2, 13):
             # Проверяем, выбран ли номер, и устанавливаем соответствующий текст кнопки
-            if int(self.selected_number) == i:
+            if self.selected_number == i:
                 button_text = f"{i}ч ✅"  # Зеленая галочка для выбранного номера
             else:
                 button_text = f"{i}ч ❌"  # Красный крестик для невыбранного номера
