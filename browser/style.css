@@ -1,25 +1,87 @@
-body {
+/*основные настройки для всех таблиц*/
+table {
+    border-collapse: collapse;
     font-family: Arial, sans-serif;
+    border: 1px solid black;
 }
-/*конейтенер для информационой таблицы и для результирующей*/
+th,td{
+border: 1px solid black;
+padding: 5px 15px;
+}
+
+.main_header { /*стилизация для заголовков*/
+    background-color: #66A1D2;
+    border: 1px solid black;
+    padding: 5px 10px;
+}
+/*Заголовок "Сотрудник"*/
+
+.header_employee{
+background-color: #cce5ff;
+text-align:center;
+padding: 5px 10px;
+
+}
+/*Дни недели*/
+.weekdays{
+background-color: #cce5ff;
+padding: 3px 15px 3px 3px;
+text-align:left;
+
+}
+/*дни*/
+.days  {
+    background-color: #cce5ff;
+    text-align: right;
+    padding: 3px 2px 3px 15px;
+}
+
+
+/*Список сотрудников */
+.employees{
+background-color: #cce5ff;
+padding-left:3px;
+}
+/*стилизация для смен*/
+
+.work {
+    background-color: #FF0000;
+    color: #FF0000;
+}
+.weekend {
+    background-color: #92D050;
+    color: #92D050;
+}
+
+.invent {
+    background-color: #00B0F0;
+    color: #00B0F0;
+}
+.dop_smens{
+    background-color: #FFC000;
+    color:black;
+}
+
+
+
+/*Информационная таблица*/
 .table-container {
     display: flex;
     margin-top:10px;
 }
 
+
+
+
 /*Информационная таблица*/
 
-.table_info {
-        min-width: 100px; /* Минимальная ширина таблицы */
-        border-collapse: collapse; /* Убирает двойные границы */
-
-    }
 
 .table_info th {
-    min-width: 150px; /* Минимальная ширина ячеек заголовка */
-    border: 1px solid #000; /* Граница ячеек */
+    max-width: 150px; /* Минимальная ширина ячеек заголовка */
     text-align: center; /* Выравнивание текста */
+    padding:5px;
 }
+
 
 .summaryweekend {
     background-color: #92D050;
@@ -43,60 +105,56 @@ body {
     text-align: center;
 }
 
-table {
-    border-collapse: collapse;
-    margin-top: 10px;
-    min-width: 300px; /* Минимальная ширина для предотвращения сжатия */
-}
-/*Результирующая таблица*/
+/*результарующая таблица*/
 .result_table{
 margin-left: 100px;
 }
 
-th, td {
-    border: 1px solid black;
-    padding: 5px 10px;
+.header_employee_result { /*заголовок "Сотрудник*/
+background-color: #FFF2CC;
+
 }
-.data_result td {
-    text-align: center; /* Выравнивание для всех ячеек */
+.header_smens_result {/*заголовок "смены"*/
+background-color: #FFE699;
+padding:10px 40px;
 }
 
-.data_result td:first-child {
-    text-align: left; /* Выравнивание только для первой ячейки */
+.header_dopsmens_result {/*заголовок "Подработки"*/
+background-color:#FFD966;
 }
+
 .smens_or_dop th{
-        padding: 3px 30px  3px 2px;
-        text-align: left ; /* Выравнивание текста влево */
-    }
-
-.header_winter {
-    background-color: #66A1D2;
+padding: 3px 30px  3px 2px;
+text-align: left ; /* Выравнивание текста влево */
 }
 
-.header {
-    background-color: #cce5ff;
+.smens_color {
+background-color: #FFE699;
+text-align:center;
 }
 
-.weekend {
-    background-color: #92D050;
-    color: #92D050;
+.dop_smens_color {
+background-color: #FFD966;
+text-align:center;
 }
-.work {
-    background-color: #FF0000;
-    color: #FF0000;
+.data_result{
+background-color: #FFF2CC;
+text-align:left;
+padding-left:3px;
+
 }
-.invent {
-    background-color: #00B0F0;
-    color: #00B0F0;
+.dopsmens_color{
+background-color: #FFD966;
+text-align:center;
 }
-.dop_smens{
-    background-color: #FFC000;
-    color:black;
-}
-.guide {
-    background-color: #ff69b4;
-    color: white;
-    text-align: center;
-    font-weight: bold;
-    padding: 10px;
-}
+
+
+
+
+
+
+
+
+
+
+

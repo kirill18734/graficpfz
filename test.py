@@ -25,11 +25,11 @@ list_months_eng = ['January', 'February', 'March', 'April', 'May',
                    'June', 'July', 'August', 'September', 'October', 'November',
                    'December']
 weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
-con = sl.connect('DB/data_grafic.db')
-cursor = con.cursor()
-query = f'''select * from February'''
-
-t = [t for t in cursor.execute(query) ] # Выполняем запрос
+# con = sl.connect('DB/data_grafic.db')
+# cursor = con.cursor()
+# query = f'''select * from February'''
+#
+# t = [t for t in cursor.execute(query) ] # Выполняем запрос
 
 def get_first_weekday_index(month_index):
     # Если год не указан, используем текущий год

@@ -1,7 +1,7 @@
 # подключаем SQLite
+import calendar
 import sqlite3 as sl
 from datetime import datetime
-import calendar
 
 weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
 list_months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май',
@@ -18,9 +18,70 @@ def data_months():
 
     return [next_month - 1, calendar.monthrange(next_year, next_month)[0]]
 
+def generate_weekdays_html(count_days):
+    html_output = ''
+    for i in range(1, count_days + 1):
+        html_output += f'<th class="days">{i}</th>'
+    return html_output
+
+def first_weekday(month_index):
+    today = datetime.today().date()
+    current_month = today.month - 1  # Приводим к индексу с 0
+    previous_month = current_month - 1  # Определяем предыдущий месяц
+
+    # Проверяем, если месяц после предыдущего в текущем году
+    if month_index >= previous_month:
+        year = today.year
+    else:
+        year = today.year + 1
+
+    # Создаем дату для первого дня месяца
+    first_day = datetime(year, month_index + 1, 1)
+
+    # Получаем индекс дня недели (0 - понедельник, 6 - воскресенье)
+    return first_day.weekday()
+
+def get_weekdays(index_weekday, count_days):
+
+    html_output = ''
+    for i in range(count_days):
+        dayIndex = (index_weekday + i) % len(weekdays)  # Определяем индекс дня недели
+        html_output += f'<th class="weekdays">{weekdays[dayIndex]}</th>'
+    return html_output
+
+def clear_months():
+    # Получаем текущий месяц (индекс)
+    now = datetime.now().month - 1
+
+    # Индексы предыдущего и следующего месяцев
+    previous_month = (now - 1) % 12
+    next_month = (now + 1) % 12
+
+    # Получаем индексы всех месяцев, кроме текущего, предыдущего и следующего
+    excluded_months = {now, previous_month, next_month}
+    all_months_indices = [list_months_eng[i] for i in range(12) if i not in excluded_months]
+    for month in all_months_indices:
+        con = sl.connect('DB/data_grafic.db')
+        cursor = con.cursor()
+
+        # Получение списка столбцов
+        cursor.execute(f"PRAGMA table_info({month});")
+        t = [row[1] for row in cursor.fetchall()[1:]]
+        formatted_string = ', '.join([f'{value} = 0.0' for value in t])
+        con = sl.connect('DB/data_grafic.db')
+        cursor = con.cursor()
+        test_query = f'''
+                UPDATE {month}
+                SET {formatted_string}
+                '''
+        cursor.execute(test_query)  # Выполняем запрос
+        con.commit()  # Фиксируем изменения
+        cursor.close()  # Закрываем курсор
+        con.close()  # Закрываем соединение
+    return all_months_indices
+
 
 def get_result_count(month):
-    #
     # формируем html страницу для нужного месяца
 
     # Подключение к базе данных
@@ -63,11 +124,11 @@ end
         count += 1
     # # Формирование запроса
     query = f'''
-        SELECT '<tr class="data_result"><td>' || name || '</td>' 
-        ,'<td>',{'+ '.join(query_1)},'</td>' 
-        ,'<td>',{'+ '.join(query_2)},'</td>'
-        ,'<td>',{'+ '.join(query_3)},'</td>'
-        ,'<td>',{'+ '.join(query_4)},'</td>'
+        SELECT '<tr><td class="data_result">' || name || '</td>' 
+        ,'<td class="smens_color">',{'+ '.join(query_1)},'</td>' 
+        ,'<td class="smens_color">',{'+ '.join(query_2)},'</td>'
+        ,'<td class="dopsmens_color">',{'+ '.join(query_3)},'</td>'
+        ,'<td class="dopsmens_color">',{'+ '.join(query_4)},'</td>'
         ,'</tr>' FROM {month};
         '''
 
@@ -83,51 +144,43 @@ end
     return employee
 
 
-# get_result_count('February')
-
-
-# получаем количество дней в нужном месяце
-def get_count_days(month):
-    # Открываем файл с базой данных
-    con = sl.connect('DB/data_grafic.db')
-    with con:
-        data = con.execute(f'''
-        SELECT COUNT(*) FROM pragma_table_info('{month}');
-
-        ''')
-        for i in data:
-            return (i[0] - 1)
-
-
 def get_empoyee(month):
-    #
     # формируем html страницу для нужного месяца
 
     # Подключение к базе данных
     con = sl.connect('DB/data_grafic.db')
     cursor = con.cursor()
-    cursor.execute(f'select count(*) from {month}')
-    t = [row[0] for row in cursor.fetchall()]
-    # если в новом месяце нет, сотрудников, то копируем из предыдущего
-    if t[0] == 0 :
-        cursor.execute(f'''
-        INSERT INTO {month} (name)
-SELECT name FROM {list_months_eng[data_months()[0]-1]};
-''')
     # Получение списка столбцов
     cursor.execute(f"PRAGMA table_info({month});")
-    query_1 = [f'''
-    case when {row[1]} = 1.0 then  \'<td class="work ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
-     when {row[1]} = 0.0 then  \'<td class="weekend ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
-     when {row[1]} = 1.1 then  \'<td class="invent">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
-     when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' end
+    current_year = datetime.now().year
 
-    '''
-               for row in cursor.fetchall()][1:]
+    # Проверяем, является ли текущий год високосным
+    is_leap_year = calendar.isleap(current_year)
 
+    query_1 = [
+                  f'''
+case when {row[1]} = 1.0 then  \'<td class="work ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+when {row[1]} = 0.0 then  \'<td class="weekend ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+when {row[1]} = 1.1 then  \'<td class="invent">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' end
+    ''' for row in cursor.fetchall()][1:]
+
+    if not is_leap_year and month == 'February':
+        con = sl.connect('DB/data_grafic.db')
+        cursor = con.cursor()
+        # Получение списка столбцов
+        cursor.execute(f"PRAGMA table_info({month});")
+        query_1 = [
+                      f'''
+        case when {row[1]} = 1.0 then  \'<td class="work ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+        when {row[1]} = 0.0 then  \'<td class="weekend ">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+        when {row[1]} = 1.1 then  \'<td class="invent">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
+        when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' end
+            ''' for row in cursor.fetchall()][1:-1]
+        print(query_1)
     # Формирование запроса
     query = f'''
-    SELECT '<tr><td class="header">' || name || '</td>' || {', '.join(query_1)} || '</tr>' FROM {month};
+    SELECT '<tr><td class="employees">' || name || '</td>' || {', '.join(query_1)} || '</tr>' FROM {month};
     '''
 
     employee = ''
@@ -140,7 +193,24 @@ SELECT name FROM {list_months_eng[data_months()[0]-1]};
     return employee
 
 
-def creat_html(month, index_weekday, count_days, empoyee, result_count):
+# название основной и дополнительной таблицы, индекс первого дня недели месяца, количество дней месяца, сотрудник, дополнительная таблица
+def creat_html(month, index_weekday, empoyee, result_count):
+    # Открываем файл с базой данных
+    con = sl.connect('DB/data_grafic.db')
+    with con:
+        data = con.execute(f'''
+            SELECT COUNT(*) FROM pragma_table_info('{month}');
+
+            ''')
+        for i in data:
+            current_year = datetime.now().year
+
+            # Проверяем, является ли текущий год високосным
+            is_leap_year = calendar.isleap(current_year)
+            count_days = str(i[0])
+            if not is_leap_year and month == 'February':
+                count_days = str(i[0]-1)
+
     result_text = '''
 <!DOCTYPE html>
 <html lang="ru">
@@ -151,30 +221,16 @@ def creat_html(month, index_weekday, count_days, empoyee, result_count):
     <title>График смен</title>
 </head>
 <body>
-<table>
-    <tr class="header_winter">
-        <th colspan="'''+str(count_days+1)+'''">''' + month + '''</th>
+<table class="main_table">
+    <tr class="main_header">
+        <th colspan="''' + count_days + '''">''' + list_months[list_months_eng.index(month)] + '''</th>
     </tr>   
-    <tr class="header">
-        <th rowspan="2">Сотрудник</th>
-        <script>
-const days = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
-const index_weekday = ''' + index_weekday + '''/* здесь должен быть ваш индекс */;
-
-for (let i = 0; i < 4; i++) { // 4 недели
-    for (let j = 0; j < 7; j++) {
-        const dayIndex = (index_weekday + j) % 7; // вычисляем индекс дня
-        document.write('<th>' + days[dayIndex] + '</th>');
-    }
-}
-</script>
+    <tr>
+        <th rowspan="2" class="header_employee">Сотрудник</th>
+        '''+get_weekdays(index_weekday, int(count_days)-1)+'''
     </tr>
-    <tr class="header">
-        <script>
-        for (let i = 1; i < ''' + str(count_days+1) + '''; i++) {
-            document.write('<th>' + i + '</th>');
-        }
-        </script>
+    <tr class="days">
+''' + generate_weekdays_html(int(count_days)-1) + '''
     </tr>
 ''' + empoyee + '''
 </table>
@@ -186,19 +242,19 @@ for (let i = 0; i < 4; i++) { // 4 недели
         <tr class="summarydop"><th>Подработка/ч</th> </tr>
     </table>
 <table class="result_table">
-<tr class="header_winter">
-    <th colspan="5">Итоги (''' + month + ''')</th>
+<tr class="main_header">
+    <th colspan="5">Итоги (''' + list_months[list_months_eng.index(month)]  + ''')</th>
 </tr>
 <tr>
-            <th rowspan="2">Сотрудник</th>
-            <th colspan="2">Смены</th>
-            <th colspan="2">Подработки/ч</th>
+            <th rowspan="2" class="header_employee_result">Сотрудник</th>
+            <th colspan="2" class="header_smens_result">Смены</th>
+            <th colspan="2" class="header_dopsmens_result">Подработки/ч</th>
         </tr>
         <tr class="smens_or_dop">
-            <th >1/2</th>
-            <th>2/2</th>
-            <th>1/2</th>
-            <th >2/2</th>
+            <th class="smens_color">1/2</th>
+            <th class="smens_color">2/2</th>
+            <th class="dop_smens_color">1/2</th>
+            <th class="dop_smens_color">2/2</th>
         </tr>
         
         ''' + result_count + '''
@@ -209,9 +265,10 @@ for (let i = 0; i < 4; i++) { // 4 недели
 
 '''
 
-    with open(f'browser/{list_months_eng[data_months()[0]]}.html', 'w', encoding='UTF-8') as w:
+    with open(f'browser/{month}.html', 'w', encoding='UTF-8') as w:
         t = w.write(result_text)
 
 
-creat_html(list_months[data_months()[0]], weekdays[data_months()[1]], get_count_days(list_months_eng[data_months()[0]]),
-get_empoyee(list_months_eng[data_months()[0]]), get_result_count(list_months_eng[data_months()[0]]))
+clear_months()
+for month in list_months_eng:
+    creat_html(month, first_weekday(list_months_eng.index(month)), get_empoyee(month), get_result_count(month))
