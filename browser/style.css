@@ -171,7 +171,6 @@ background-color: #FFF2CC;
 vertical-align: middle;
 padding: 5px 10px;
 
-
 }
 .header_smens_result {/*заголовок "смены"*/
 background-color: #FFE699;
@@ -199,6 +198,7 @@ text-align:center;
 background-color: #FFD966;
 text-align:center;
 }
+
 .data_result{
 background-color: #FFF2CC;
 text-align:left;
