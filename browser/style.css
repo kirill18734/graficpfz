@@ -43,16 +43,18 @@ q:before, q:after {
 table {
 	border-collapse: collapse;
 	border-spacing: 0;
+
 }
 
 /*основные настройки для всех таблиц*/
 table , th, td{
     font-family: Arial, sans-serif;
     border: 1px solid black;
+
 }
 .main_table{
-    
-margin:20px 20px;
+
+ margin: 20px auto; /* Выравнивание по центру */
 }
 
 .main_header { /*стилизация для заголовков*/
@@ -124,7 +126,7 @@ font-weight: bold;
     display: flex;
     margin-top: 10px;
     margin-left: 20px;
-    
+    justify-content: center; /* Центрируем контейнер */
     
 }
 
@@ -212,6 +214,45 @@ text-align:center;
 }
 
 
+/*Стилизация для кнопок */
+.navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.navigation button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease-in-out, transform 0.2s;
+}
+
+.navigation button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.navigation button:active {
+    background-color: #004494;
+    transform: scale(0.95);
+}
+
+#currentMonthText {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
 
 
 

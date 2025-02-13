@@ -8,9 +8,10 @@ from telebot.types import BotCommand, InlineKeyboardMarkup, \
     InlineKeyboardButton
 # Создаем экземпляр бота
 from edit_chart.get_img_xl import open_site
-from main import data_months
+from main import *
 import calendar
 from datetime import datetime
+
 bot = telebot.TeleBot(data_config['my_telegram_bot']['bot_token'],
 
                       parse_mode='HTML')
@@ -25,11 +26,7 @@ list_months_eng = ['January', 'February', 'March', 'April', 'May',
                    'June', 'July', 'August', 'September', 'October', 'November',
                    'December']
 weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
-# con = sl.connect('DB/data_grafic.db')
-# cursor = con.cursor()
-# query = f'''select * from February'''
-#
-# t = [t for t in cursor.execute(query) ] # Выполняем запрос
+
 
 def get_first_weekday_index(month_index):
     # Если год не указан, используем текущий год
@@ -210,10 +207,10 @@ class Main:
                     # После выбора месяца показываем кнопки "Смены / подработки" и "Сотрудники"
                     self.show_sments_dop_sments()
                 elif self.call.data in ['image']:
-                    response_text = f"""Заявка на создание картинки  создана. Пожалуйста ожидайте. В течении 30 сек картинка отправиться."""
+                    response_text = f"""Заявка на создание картинки  создана. Пожалуйста ожидайте. В течении 5сек картинка отправиться."""
                     bot.answer_callback_query(self.call.id, response_text,
                                               show_alert=True)
-                    open_site(self.month)
+                    open_site(list_months_eng[self.index])
                     # Отправляем изображение
                     with open(path_to_img,
                               'rb') as photo:
@@ -267,7 +264,6 @@ class Main:
                     # получает сотрудников из БД
                     # Предположим, что cursor.execute возвращает список кортежей
 
-
                     # Получаем текущий год
                     current_year = datetime.now().year
 
@@ -299,7 +295,7 @@ class Main:
                             try:
                                 cursor.execute(query)  # Выполняем запрос
                                 con.commit()  # Фиксируем изменения
-                                if len(self.selected_employees)==1:
+                                if len(self.selected_employees) == 1:
                                     response_text = f"Сотрудник  {', '.join(self.selected_employees)} удален."
                                 else:
                                     response_text = f"Сотрудники  {', '.join(self.selected_employees)} удалены."
@@ -528,11 +524,11 @@ class Main:
     def data_image(self):
         self.markup = InlineKeyboardMarkup()
         item4 = InlineKeyboardButton("Перейти на сайт",
-                                     callback_data='site_image', url=data_config["URL"], disable_web_page_preview=True)
-        # item5 = InlineKeyboardButton("Показать картинку ",
-        #                              callback_data='image',
-        #                              )
-        self.markup.add(item4)
+                                     callback_data='site_image')
+        item5 = InlineKeyboardButton("Показать картинку ",
+                                     callback_data='image',
+                                     )
+        self.markup.add(item4, item5)
         try:
             bot.edit_message_text(
                 f"""Вы находитесь в разделе: "{self.selected_month}" - "<u>Посмотреть график</u>".\n\nИспользуй кнопки для навигации. Чтобы вернуться на шаг назад, используй команду /back. В начало /start \n\nВыберите раздел:""",
@@ -609,9 +605,9 @@ class Main:
                         con.close()  # Закрываем соединение
 
             bot.answer_callback_query(self.call.id, response_text,
-                                          show_alert=True)
+                                      show_alert=True)
             bot.delete_message(chat_id=message.chat.id,
-                                   message_id=message.message_id)
+                               message_id=message.message_id)
             self.add_del_employees()
         else:
             if message.message_id:
@@ -627,7 +623,6 @@ class Main:
                     self.add_del_employees()
 
     def dell_employee(self):
-
 
         con = sl.connect('DB/data_grafic.db')
         cursor = con.cursor()
@@ -736,6 +731,7 @@ class Main:
 # запуск бота
 while True:
     try:
+        run()
         Main()
         bot.infinity_polling(timeout=90, long_polling_timeout=5)
     except Exception as e:

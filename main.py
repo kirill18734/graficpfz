@@ -1,6 +1,7 @@
 # подключаем SQLite
 import calendar
 import sqlite3 as sl
+import threading
 from datetime import datetime
 
 weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
@@ -177,7 +178,6 @@ when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGE
         when {row[1]} = 1.1 then  \'<td class="invent">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' 
         when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGER)  || \'</td>\' end
             ''' for row in cursor.fetchall()][1:-1]
-        print(query_1)
     # Формирование запроса
     query = f'''
     SELECT '<tr><td class="employees">' || name || '</td>' || {', '.join(query_1)} || '</tr>' FROM {month};
@@ -260,6 +260,43 @@ def creat_html(month, index_weekday, empoyee, result_count):
         ''' + result_count + '''
 </table>
 </div>
+
+    <div class="navigation">
+    <button onclick="navigate(-1)">Назад</button>
+    <span id="currentMonthText"></span>
+    <button onclick="navigate(1)">Вперед</button>
+</div>
+
+<script>
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+    
+    const monthsRus = [
+        "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+        "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+    ];
+
+    const currentMonth = window.location.pathname.split('/').pop().replace('.html', '');
+    const monthIndex = months.indexOf(currentMonth);
+    
+    if (monthIndex !== -1) {
+        const currentMonthText = (new Date().toLocaleString('en', { month: 'long' }) === currentMonth)
+            ? `Текущий месяц: ${monthsRus[monthIndex]}`
+            : monthsRus[monthIndex];
+        
+        document.getElementById("currentMonthText").textContent = currentMonthText;
+
+        function navigate(direction) {
+            let newIndex = monthIndex + direction;
+            if (newIndex < 0) newIndex = 11;  // Декабрь -> Январь
+            if (newIndex > 11) newIndex = 0;  // Январь -> Декабрь
+            window.location.href = months[newIndex] + ".html";
+        }
+    }
+</script>
+
 </body>
 </html>
 
@@ -268,7 +305,8 @@ def creat_html(month, index_weekday, empoyee, result_count):
     with open(f'browser/{month}.html', 'w', encoding='UTF-8') as w:
         t = w.write(result_text)
 
-
-clear_months()
-for month in list_months_eng:
-    creat_html(month, first_weekday(list_months_eng.index(month)), get_empoyee(month), get_result_count(month))
+def run():
+    clear_months()
+    for month in list_months_eng:
+        creat_html(month, first_weekday(list_months_eng.index(month)), get_empoyee(month), get_result_count(month))
+threading.Timer(30, run).start()
