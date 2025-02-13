@@ -8,7 +8,7 @@ from telebot.types import BotCommand, InlineKeyboardMarkup, \
     InlineKeyboardButton
 # Создаем экземпляр бота
 from edit_chart.get_img_xl import open_site
-from main import *
+from update_html import *
 import calendar
 from datetime import datetime
 
