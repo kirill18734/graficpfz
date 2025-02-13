@@ -1,18 +1,66 @@
-/*основные настройки для всех таблиц*/
+/*сброс стилей*/
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+html {
+	height: 100%;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
 table {
-    border-collapse: collapse;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/*основные настройки для всех таблиц*/
+table , th, td{
     font-family: Arial, sans-serif;
     border: 1px solid black;
 }
-th,td{
-border: 1px solid black;
-padding: 5px 15px;
+.main_table{
+    
+margin:20px 20px;
 }
 
 .main_header { /*стилизация для заголовков*/
     background-color: #66A1D2;
     border: 1px solid black;
-    padding: 5px 10px;
+    padding: 5px 15px;
+    font-weight: bold;
+
 }
 /*Заголовок "Сотрудник"*/
 
@@ -20,6 +68,7 @@ padding: 5px 15px;
 background-color: #cce5ff;
 text-align:center;
 padding: 5px 10px;
+vertical-align: middle
 
 }
 /*Дни недели*/
@@ -41,86 +90,99 @@ text-align:left;
 .employees{
 background-color: #cce5ff;
 padding-left:3px;
+font-weight: bold;
 }
 /*стилизация для смен*/
 
 .work {
     background-color: #FF0000;
     color: #FF0000;
+    padding: 5px 15px;
 }
 .weekend {
     background-color: #92D050;
     color: #92D050;
+    padding: 5px 15px;
 }
 
 .invent {
     background-color: #00B0F0;
     color: #00B0F0;
+    padding: 5px 15px;
 }
 .dop_smens{
     background-color: #FFC000;
     color:black;
+    padding: 5px 15px;
 }
 
 
 
 /*Информационная таблица*/
+
 .table-container {
     display: flex;
-    margin-top:10px;
+    margin-top: 10px;
+    margin-left: 20px;
+    
+    
 }
 
-
-
-
-/*Информационная таблица*/
-
-
-.table_info th {
-    max-width: 150px; /* Минимальная ширина ячеек заголовка */
-    text-align: center; /* Выравнивание текста */
-    padding:5px;
+.table_info {
+    height: 150px; /* Установите желаемую высоту для таблицы */
+    min-width: 150px;
+    /* Выравниваем по горизонтали (по желанию) */
 }
-
+.table_info th{
+    vertical-align: middle;
+}
 
 .summaryweekend {
     background-color: #92D050;
-    text-align: center;
     color:#FFFFFF;
+    font-weight: bold;
+    
 }
 
 .summarywork {
     background-color: #FF0000;
-    text-align: center;
+     font-weight: bold;/* Выравниваем по горизонтали (по желанию) */
 }
 
 .summarydop {
     background-color: #FFC000;
-    text-align: center;
     color:#FFFFFF;
+    font-weight: bold;
 }
 
 .summaryinvent {
     background-color: #00B0F0;
-    text-align: center;
+    font-weight: bold;
 }
 
 /*результарующая таблица*/
 .result_table{
 margin-left: 100px;
+
 }
 
 .header_employee_result { /*заголовок "Сотрудник*/
 background-color: #FFF2CC;
+vertical-align: middle;
+padding: 5px 10px;
+
 
 }
 .header_smens_result {/*заголовок "смены"*/
 background-color: #FFE699;
-padding:10px 40px;
+padding:10px 30px;
+font-weight: bold;
 }
 
 .header_dopsmens_result {/*заголовок "Подработки"*/
 background-color:#FFD966;
+padding:10px 15px;
+font-weight: bold;
 }
 
 .smens_or_dop th{
@@ -140,14 +202,14 @@ text-align:center;
 .data_result{
 background-color: #FFF2CC;
 text-align:left;
-padding-left:3px;
+padding:7px 0px 7px 3px;
+font-weight: bold;
 
 }
 .dopsmens_color{
 background-color: #FFD966;
 text-align:center;
 }
-
 
 
 

@@ -222,8 +222,8 @@ def creat_html(month, index_weekday, empoyee, result_count):
 </head>
 <body>
 <table class="main_table">
-    <tr class="main_header">
-        <th colspan="''' + count_days + '''">''' + list_months[list_months_eng.index(month)] + '''</th>
+    <tr >
+        <th colspan="''' + count_days + '''" class="main_header">''' + list_months[list_months_eng.index(month)] + '''</th>
     </tr>   
     <tr>
         <th rowspan="2" class="header_employee">Сотрудник</th>
@@ -242,8 +242,8 @@ def creat_html(month, index_weekday, empoyee, result_count):
         <tr class="summarydop"><th>Подработка/ч</th> </tr>
     </table>
 <table class="result_table">
-<tr class="main_header">
-    <th colspan="5">Итоги (''' + list_months[list_months_eng.index(month)]  + ''')</th>
+<tr >
+    <th colspan="5" class="main_header">Итоги (''' + list_months[list_months_eng.index(month)]  + ''')</th>
 </tr>
 <tr>
             <th rowspan="2" class="header_employee_result">Сотрудник</th>
