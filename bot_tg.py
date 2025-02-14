@@ -2,7 +2,7 @@ import json
 import os
 import telebot
 from telebot import types
-from config.auto_search_dir import data_config, path_to_img
+from config.auto_search_dir import data_config, path_to_img, path_to_users_json, path_db
 from telebot.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 # Создаем экземпляр бота
 # from edit_chart.get_img_xl import open_site
@@ -15,7 +15,6 @@ bot = telebot.TeleBot(data_config['my_telegram_bot']['bot_token'],
                       parse_mode='HTML')
 # -------------------------------------сохранение  новых пользователей --------------------------------
 user_ids = set()
-USER_IDS_FILE = 'user_ids.json'
 
 list_months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май',
                'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
@@ -44,14 +43,14 @@ def get_first_weekday_index(month_index):
 
 
 def load_user_ids():
-    if os.path.exists(USER_IDS_FILE):
-        with open(USER_IDS_FILE, 'r') as file:
+    if os.path.exists(path_to_users_json):
+        with open(path_to_users_json, 'r') as file:
             return set(json.load(file))
     return set()
 
 
 def save_user_ids(userids):
-    with open(USER_IDS_FILE, 'w') as file:
+    with open(path_to_users_json, 'w') as file:
         json.dump(list(userids), file)
 
 
@@ -93,7 +92,7 @@ class Main:
         return formatted_string
 
     def save_edit_smens(self, month, name, new_values):
-        con = sl.connect('DB/data_grafic.db')
+        con = sl.connect(path_db)
         cursor = con.cursor()
         test_query = f'''
         UPDATE {month} 
@@ -255,7 +254,7 @@ class Main:
                     self.add_del_employees()
 
                 elif self.call.data.startswith('user_'):
-                    con = sl.connect('DB/data_grafic.db')
+                    con = sl.connect(path_db)
                     cursor = con.cursor()
                     self.select_user = str(self.call.data).replace(
                         'user_', '')
@@ -285,7 +284,7 @@ class Main:
 
                     if self.selected_employees:
                         for month in list_months_eng:
-                            con = sl.connect('DB/data_grafic.db')
+                            con = sl.connect(path_db)
                             cursor = con.cursor()
                             response_text = 'Удалено'
                             query = f'''DELETE FROM  {month} where name in ({','.join(f"'{employee}'" for employee in self.selected_employees)});'''
@@ -538,7 +537,7 @@ class Main:
                              reply_markup=self.markup)
 
     def smens_users(self):
-        con = sl.connect('DB/data_grafic.db')
+        con = sl.connect(path_db)
         cursor = con.cursor()
         self.markup = types.InlineKeyboardMarkup()
         buttons = []
@@ -586,7 +585,7 @@ class Main:
 
             if str(employee_name):
                 for month in list_months_eng:
-                    con = sl.connect('DB/data_grafic.db')
+                    con = sl.connect(path_db)
                     cursor = con.cursor()
                     query = f'''INSERT INTO {month} (name) VALUES ('{str(employee_name)}');'''
                     try:
@@ -621,7 +620,7 @@ class Main:
 
     def dell_employee(self):
 
-        con = sl.connect('DB/data_grafic.db')
+        con = sl.connect(path_db)
         cursor = con.cursor()
         query = f'''
         select name from {list_months_eng[self.index]};

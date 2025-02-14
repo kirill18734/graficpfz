@@ -4,6 +4,8 @@ import sqlite3 as sl
 import threading
 from datetime import datetime
 
+from config.auto_search_dir import path_to_project_folder, path_db
+
 weekdays = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
 list_months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май',
                'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
@@ -62,14 +64,14 @@ def clear_months():
     excluded_months = {now, previous_month, next_month}
     all_months_indices = [list_months_eng[i] for i in range(12) if i not in excluded_months]
     for month in all_months_indices:
-        con = sl.connect('DB/data_grafic.db')
+        con = sl.connect(path_db)
         cursor = con.cursor()
 
         # Получение списка столбцов
         cursor.execute(f"PRAGMA table_info({month});")
         t = [row[1] for row in cursor.fetchall()[1:]]
         formatted_string = ', '.join([f'{value} = 0.0' for value in t])
-        con = sl.connect('DB/data_grafic.db')
+        con = sl.connect(path_db)
         cursor = con.cursor()
         test_query = f'''
                 UPDATE {month}
@@ -86,7 +88,7 @@ def get_result_count(month):
     # формируем html страницу для нужного месяца
 
     # Подключение к базе данных
-    con = sl.connect('DB/data_grafic.db')
+    con = sl.connect(path_db)
     cursor = con.cursor()
 
     # Получение списка столбцов
@@ -149,7 +151,7 @@ def get_empoyee(month):
     # формируем html страницу для нужного месяца
 
     # Подключение к базе данных
-    con = sl.connect('DB/data_grafic.db')
+    con = sl.connect(path_db)
     cursor = con.cursor()
     # Получение списка столбцов
     cursor.execute(f"PRAGMA table_info({month});")
@@ -167,7 +169,7 @@ when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGE
     ''' for row in cursor.fetchall()][1:]
 
     if not is_leap_year and month == 'February':
-        con = sl.connect('DB/data_grafic.db')
+        con = sl.connect(path_db)
         cursor = con.cursor()
         # Получение списка столбцов
         cursor.execute(f"PRAGMA table_info({month});")
@@ -196,7 +198,7 @@ when {row[1]} > 1.1 then  \'<td class="dop_smens">\' ||  CAST({row[1]} AS INTEGE
 # название основной и дополнительной таблицы, индекс первого дня недели месяца, количество дней месяца, сотрудник, дополнительная таблица
 def creat_html(month, index_weekday, empoyee, result_count):
     # Открываем файл с базой данных
-    con = sl.connect('DB/data_grafic.db')
+    con = sl.connect(path_db)
     with con:
         data = con.execute(f'''
             SELECT COUNT(*) FROM pragma_table_info('{month}');
@@ -302,7 +304,7 @@ def creat_html(month, index_weekday, empoyee, result_count):
 
 '''
 
-    with open(f'browser/{month}.html', 'w', encoding='UTF-8') as w:
+    with open(f'{path_to_project_folder}/browser/{month}.html', 'w', encoding='UTF-8') as w:
         t = w.write(result_text)
 
 def run_update_html():

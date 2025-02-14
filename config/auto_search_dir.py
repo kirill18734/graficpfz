@@ -32,9 +32,12 @@ path_to_python_exe = find_file_in_project('python.exe',
 path_to_config_json = find_file_in_project('config.json',
                                            path_to_project_folder)
 
-
-# path_to_test1_json = find_file_in_project('График_работы.xlsx',
-#                                           path_to_project_folder)
+# Ищем файл config.json и получаем его путь
+path_to_users_json = find_file_in_project('user_ids.json',
+                                           path_to_project_folder)
+# Ищем файл config.json и получаем его путь
+path_db = find_file_in_project('data_grafic.db',
+                                           path_to_project_folder)
 
 path_to_img = find_file_in_project('months.png',
                                    path_to_project_folder)
