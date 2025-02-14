@@ -5,10 +5,11 @@ from telebot import types
 from config.auto_search_dir import data_config, path_to_img
 from telebot.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 # Создаем экземпляр бота
-#from edit_chart.get_img_xl import open_site
+# from edit_chart.get_img_xl import open_site
 from update_html import *
 import calendar
 from datetime import datetime
+
 bot = telebot.TeleBot(data_config['my_telegram_bot']['bot_token'],
 
                       parse_mode='HTML')
@@ -424,14 +425,11 @@ class Main:
         item1 = InlineKeyboardButton("Смены / подработки",
                                      callback_data='shifts_jobs')
         item2 = InlineKeyboardButton("Сотрудники", callback_data='employees')
-        item3 = None
-        if data_config['URL']:
-            item3 = InlineKeyboardButton("Посмотреть график",
-                                         callback_data='get_image')  # url=data_config["URL"]
-
+        item3 = InlineKeyboardButton("Посмотреть график",
+                                     callback_data='get_image', url=data_config["URL"],
+                                     disable_web_page_preview=True)
         self.markup.add(item1, item2)
-        if data_config['URL']:
-            self.markup.add(item3)
+        self.markup.add(item3)
         # Обновляем клавиатуру в том же сообщении
         bot.edit_message_text(
             f"""Вы находитесь в разделе: "<u>{self.selected_month}</u>".\n\nИспользуй кнопки для навигации. Чтобы вернуться на шаг назад, используй команду /back. В начало /start\n\nВыберете раздел:""",
@@ -523,7 +521,7 @@ class Main:
     def data_image(self):
         self.markup = InlineKeyboardMarkup()
         item4 = InlineKeyboardButton("Перейти на сайт",
-                                     callback_data='site_image' , url=data_config["URL"], disable_web_page_preview=True)
+                                     callback_data='site_image', url=data_config["URL"], disable_web_page_preview=True)
         item5 = InlineKeyboardButton("Показать картинку ",
                                      callback_data='image',
                                      )
