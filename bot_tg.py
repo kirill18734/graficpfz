@@ -3,14 +3,12 @@ import os
 import telebot
 from telebot import types
 from config.auto_search_dir import data_config, path_to_img
-from telebot.types import BotCommand, InlineKeyboardMarkup, \
-    InlineKeyboardButton
+from telebot.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 # Создаем экземпляр бота
 #from edit_chart.get_img_xl import open_site
 from update_html import *
 import calendar
 from datetime import datetime
-
 bot = telebot.TeleBot(data_config['my_telegram_bot']['bot_token'],
 
                       parse_mode='HTML')
@@ -209,7 +207,7 @@ class Main:
                     response_text = f"""Заявка на создание картинки  создана. Пожалуйста ожидайте. В течении 5сек картинка отправиться."""
                     bot.answer_callback_query(self.call.id, response_text,
                                               show_alert=True)
-                    open_site(list_months_eng[self.index])
+                    # open_site(list_months_eng[self.index])
                     # Отправляем изображение
                     with open(path_to_img,
                               'rb') as photo:
@@ -290,7 +288,6 @@ class Main:
                             cursor = con.cursor()
                             response_text = 'Удалено'
                             query = f'''DELETE FROM  {month} where name in ({','.join(f"'{employee}'" for employee in self.selected_employees)});'''
-                            print(query)
                             try:
                                 cursor.execute(query)  # Выполняем запрос
                                 con.commit()  # Фиксируем изменения
@@ -305,6 +302,7 @@ class Main:
                                 con.close()  # Закрываем соединение
                             bot.answer_callback_query(call.id, response_text,
                                                       show_alert=True)
+                            run_update_html()
                         self.selected_employees = set()
                         self.add_del_employees()
 
@@ -319,7 +317,6 @@ class Main:
                     self.current_value = float(current_value)
                     self.key = int(day) - 1
                     if self.smens == 'smens':
-                        print(self.current_value)
                         if self.current_value == 0.0 and week_day not in ('вс', 'сб'):
                             self.status_dict[self.key] = 1.0
                             self.actualy_smens()
@@ -373,6 +370,7 @@ class Main:
                     self.actualy_smens()
                 elif call.data == 'save_smens':
                     self.status_dict[self.key] = self.selected_number
+                    run_update_html()
                     response_text = "Подработка сохранена"
                     bot.answer_callback_query(call.id, response_text,
                                               show_alert=True
@@ -387,12 +385,12 @@ class Main:
                         response_text = "Изменения сохранены."
                         bot.answer_callback_query(call.id, response_text,
                                                   show_alert=True)
-                        self.smens_users()
                     else:
                         response_text = "Не удалось сохранить смены, необходимо подключиться, возникла ошибка"
                         bot.answer_callback_query(self.call.id, response_text,
                                                   show_alert=True)
-                        self.smens_users()
+                    run_update_html()
+                    self.smens_users()
                 elif self.call.data in ['cancel_all_smens']:
                     self.smens_users()
 
@@ -602,7 +600,7 @@ class Main:
                     finally:
                         cursor.close()  # Закрываем курсор
                         con.close()  # Закрываем соединение
-
+                run_update_html()
             bot.answer_callback_query(self.call.id, response_text,
                                       show_alert=True)
             bot.delete_message(chat_id=message.chat.id,
@@ -730,7 +728,6 @@ class Main:
 # запуск бота
 while True:
     try:
-        run()
         Main()
         bot.infinity_polling(timeout=90, long_polling_timeout=5)
     except Exception as e:

@@ -305,8 +305,7 @@ def creat_html(month, index_weekday, empoyee, result_count):
     with open(f'browser/{month}.html', 'w', encoding='UTF-8') as w:
         t = w.write(result_text)
 
-def run():
+def run_update_html():
     clear_months()
     for month in list_months_eng:
         creat_html(month, first_weekday(list_months_eng.index(month)), get_empoyee(month), get_result_count(month))
-threading.Timer(30, run).start()
