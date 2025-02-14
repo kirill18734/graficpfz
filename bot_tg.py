@@ -350,9 +350,11 @@ class Main:
                     selected_number = int(call.data.split("_")[1])
                     # Проверяем, выбран ли номер
                     if self.selected_number == selected_number:
-                        self.selected_number = None  # Снимаем выбор, если номер уже выбран
+                        self.selected_number = 0.0  # Снимаем выбор, если номер уже выбран
+                        self.status_dict[self.key] = 0.0
                     else:
                         self.selected_number = selected_number  # Сохраняем новый выбранный номер
+                        self.status_dict[self.key] = selected_number
 
                     self.dop_smens()  # Обновляем кнопки
                 elif call.data == 'save_invent':
