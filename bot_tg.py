@@ -2,12 +2,11 @@ import json
 import os
 import telebot
 from telebot import types
-import sqlite3 as sl
 from config.auto_search_dir import data_config, path_to_img
 from telebot.types import BotCommand, InlineKeyboardMarkup, \
     InlineKeyboardButton
 # Создаем экземпляр бота
-from edit_chart.get_img_xl import open_site
+#from edit_chart.get_img_xl import open_site
 from update_html import *
 import calendar
 from datetime import datetime
@@ -524,11 +523,11 @@ class Main:
     def data_image(self):
         self.markup = InlineKeyboardMarkup()
         item4 = InlineKeyboardButton("Перейти на сайт",
-                                     callback_data='site_image')
+                                     callback_data='site_image' , url=data_config["URL"], disable_web_page_preview=True)
         item5 = InlineKeyboardButton("Показать картинку ",
                                      callback_data='image',
                                      )
-        self.markup.add(item4, item5)
+        self.markup.add(item4)
         try:
             bot.edit_message_text(
                 f"""Вы находитесь в разделе: "{self.selected_month}" - "<u>Посмотреть график</u>".\n\nИспользуй кнопки для навигации. Чтобы вернуться на шаг назад, используй команду /back. В начало /start \n\nВыберите раздел:""",

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+
+<html lang="en-US">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <script type="text/javascript">
+
+        // Массив с названиями месяцев
+
+        var months = [
+
+            "January", "February", "March", "April", "May", "June", 
+
+            "July", "August", "September", "October", "November", "December"
+
+        ];
+
+        
+
+        // Получаем текущий месяц (0 - январь, 11 - декабрь)
+
+        var currentMonth = new Date().getMonth();
+
+        
+
+        // Формируем URL на основе месяца
+
+        var url = "browser/" + months[currentMonth] + ".html";
+
+
+
+        // Перенаправление
+
+        window.location.href = url;
+
+    </script>
+
+    <title>Redirecting...</title>
+
+</head>
+
+<body>
+
+    <p>If you are not redirected automatically, follow this 
+
+        <a id="redirectLink" href="#">link</a>.
+
+    </p>
+
+    <script>
+
+        document.getElementById("redirectLink").href = url;
+
+    </script>
+
+</body>
+
+</html>
+
