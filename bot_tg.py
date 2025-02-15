@@ -2,7 +2,7 @@ import json
 import os
 import telebot
 from telebot import types
-from config.auto_search_dir import data_config, path_to_img, path_to_users_json, path_db
+from config.auto_search_dir import data_config, path_to_img, path_db
 from telebot.types import BotCommand, InlineKeyboardMarkup, InlineKeyboardButton
 # Создаем экземпляр бота
 # from edit_chart.get_img_xl import open_site
@@ -14,7 +14,6 @@ bot = telebot.TeleBot(data_config['my_telegram_bot']['bot_token'],
 
                       parse_mode='HTML')
 # -------------------------------------сохранение  новых пользователей --------------------------------
-user_ids = set()
 
 list_months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май',
                'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь',
@@ -42,18 +41,6 @@ def get_first_weekday_index(month_index):
     return first_weekday_index
 
 
-def load_user_ids():
-    if os.path.exists(path_to_users_json):
-        with open(path_to_users_json, 'r') as file:
-            return set(json.load(file))
-    return set()
-
-
-def save_user_ids(userids):
-    with open(path_to_users_json, 'w') as file:
-        json.dump(list(userids), file)
-
-
 class Main:
     # дополнительный аргумент, для создания нового листа
     def __init__(self):
@@ -71,7 +58,6 @@ class Main:
         self.key = None
         self.state_stack = {}  # Стек для хранения состояний
         self.selected_employees = getattr(self, 'selected_employees', set())
-
         self.user_id = None
         self.data_smens = None
         self.selected_month = None
@@ -127,8 +113,6 @@ class Main:
         @bot.message_handler(commands=['start'])
         def handle_start_main(message):
             self.user_id = message.chat.id
-            user_ids.add(self.user_id)
-            save_user_ids(user_ids)
 
             # Удаляем сообщения в диапазоне
             if message.message_id:
@@ -277,7 +261,7 @@ class Main:
                     self.status_dict = [item for sublist in value_user for item in sublist]
                     if not is_leap_year and len(self.status_dict) == 29:
                         self.status_dict = self.status_dict[:-1]
-                        self.actualy_smens()
+                    self.actualy_smens()
                 # если выбран сотрудник на удаление, то вызываем функию для
                 # удаления
                 elif self.call.data == 'confirm_delete':
@@ -541,10 +525,8 @@ class Main:
         cursor = con.cursor()
         self.markup = types.InlineKeyboardMarkup()
         buttons = []
-        # Подключение к базе данных
-        index = list_months.index(self.month)
         # получает сотрудников из БД
-        users = [user[0] for user in cursor.execute(f'select name from {list_months_eng[index]}')]
+        users = [user[0] for user in cursor.execute(f'select name from {list_months_eng[self.index]}')]
         cursor.close()  # Закрываем курсор
         con.close()
         # Получаем список пользователей
