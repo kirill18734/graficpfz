@@ -395,7 +395,7 @@ class Main:
             bot.edit_message_text(
                 f"Выберите месяц:",
                 chat_id=self.call.message.chat.id,
-                message_id=self.call.message_id,
+                message_id=self.call.message.message_id,
                 reply_markup=self.markup
             )
 
