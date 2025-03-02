@@ -409,7 +409,7 @@ class Main:
                                      callback_data='shifts_jobs')
         item2 = InlineKeyboardButton("Сотрудники", callback_data='employees')
         item3 = InlineKeyboardButton("Посмотреть график",
-                                     callback_data='get_image', url=data_config["URL"],
+                                     callback_data='get_image', url=f"{data_config['URL']}{list_months_eng[self.index]}.html",
                                      disable_web_page_preview=True)
         self.markup.add(item1, item2)
         self.markup.add(item3)
@@ -504,7 +504,7 @@ class Main:
     def data_image(self):
         self.markup = InlineKeyboardMarkup()
         item4 = InlineKeyboardButton("Перейти на сайт",
-                                     callback_data='site_image', url=data_config["URL"], disable_web_page_preview=True)
+                                     callback_data='site_image', url=f"{data_config['URL']}{list_months_eng[self.index]}.html", disable_web_page_preview=True)
         item5 = InlineKeyboardButton("Показать картинку ",
                                      callback_data='image',
                                      )
